@@ -1,33 +1,38 @@
+from pydantic import ValidationError
+
+from chat_service import generate_answer
+from config import settings
+from history import save_chat_record
+from models import ChatRequest
 from utils.logger import get_logger
 
 
 logger = get_logger(__name__)
 
 
-def parse_user_number(text: str) -> int:
-    """
-    将用户输入的文本转换成整数。
-    """
-    logger.info("开始解析用户输入")
-
-    number = int(text)
-
-    logger.info("用户输入解析成功")
-    return number
-
-
-def main():
+def main() -> None:
     logger.info("程序启动")
+    logger.info("当前环境: %s", settings.APP_ENV or "dev")
 
-    user_input = input("请输入一个整数：")
+    user_input = input("请输入你的问题：").strip()
 
     try:
-        number = parse_user_number(user_input)
-        print(f"你输入的整数是：{number}")
+        request = ChatRequest(question=user_input)
+        logger.info("收到用户问题: %s", request.question)
 
-    except ValueError as e:
-        logger.error(f"输入解析失败：{e}")
-        print("输入错误：请输入合法整数，例如 10、20、100。")
+        response = generate_answer(request)
+        logger.info("生成模拟回答")
+
+        save_chat_record(request, response)
+        logger.info("问答记录已保存")
+
+        print(f"AI 回复：{response.answer}")
+    except ValidationError as error:
+        logger.error("问题校验失败: %s", error)
+        print("输入错误：问题不能为空。")
+    except OSError as error:
+        logger.error("保存问答记录失败: %s", error)
+        print("保存记录失败，请检查文件权限。")
 
     logger.info("程序结束")
 

@@ -18,3 +18,6 @@ class Settings:
             raise ValueError("API_KEY is not set in the environment variables.")
 
 settings = Settings()
+
+APP_NAME = "AI Agent Basic"
+APP_VERSION = "0.1.0"
